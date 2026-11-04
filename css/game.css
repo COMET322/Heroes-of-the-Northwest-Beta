@@ -118,4 +118,7 @@ body {
 #gameCanvas, #GameCanvas {
     width: 100% !important;
     height: 100% !important;
+    max-width: 1280px !important; 
+    max-height: 720px !important;
+    margin: auto; /* Centers it on the screen */
 }
