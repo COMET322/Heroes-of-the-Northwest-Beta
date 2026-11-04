@@ -114,3 +114,8 @@ body {
         transform: rotate(360deg);
     }
 }
+
+#gameCanvas, #GameCanvas {
+    width: 100% !important;
+    height: 100% !important;
+}
