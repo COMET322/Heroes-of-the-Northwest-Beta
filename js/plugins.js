@@ -6,5 +6,6 @@ var $plugins =
 {"name":"MathWolf_Mage","status":true,"description":"MathWolf Mage Prototype - Math QTE for attack & MP barrier","parameters":{"attackMaxNumber":"9","barrierMaxNumber":"6","manaCost":"8","successMultiplier":"1.60","failMultiplier":"0.60","barrierReduction":"0.85"}},
 {"name":"MathWolf_Shield","status":true,"description":"MathWolf Shield - damage-absorbing barrier + HP gauge overlay","parameters":{}},
 {"name":"MathWolf_Tank","status":true,"description":"MathWolf Tank Prototype - Guard raises aggro (target rate)","parameters":{"aggroMultiplier":"4.0"}},
-{"name":"MathWolf_Questions","status":true,"description":"MathWolf Question Bank - Aljabar SMP (Easy / Medium / Hard)","parameters":{}}
+{"name":"MathWolf_Questions","status":true,"description":"MathWolf Question Bank - Aljabar SMP (Easy / Medium / Hard)","parameters":{}},
+{"name":"Wavedash","status":true,"description":"Enables canvas stretch-to-fit in web browsers.","parameters":{}}
 ];
