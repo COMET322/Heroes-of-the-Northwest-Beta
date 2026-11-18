@@ -1,12 +1,13 @@
 //=============================================================================
 // MathWolf_Fighter.js
-// v5: Fighter role math-QTE combat + the shared QTE system for all classes.
-// Questions now come from the question bank (MathWolf_Questions.js).
+// v6: Fighter role math-QTE combat + the shared QTE system for all classes.
+// Questions come from the question bank (MathWolf_Questions.js).
+// NEW: after a battle, a review screen explains every question you missed.
 //=============================================================================
 
 /*:
  * @target MZ
- * @plugindesc MathWolf Fighter v5 - Math QTE (algebra question bank) for attack, parry & Berserk
+ * @plugindesc MathWolf Fighter v6 - Math QTE (algebra question bank) + post-battle review
  * @author MathWolf Dev
  *
  * @param durabilityMax
@@ -95,9 +96,50 @@
  * @decimals 2
  * @default 2.20
  *
+ * @param showReview
+ * @text Show Review After Battle
+ * @desc After a battle, show every question you missed with the correct answer and an explanation.
+ * @type boolean
+ * @default true
+ *
+ * @param reviewTitle
+ * @text Review: Title
+ * @type string
+ * @default Review Soal
+ *
+ * @param labelYourAnswer
+ * @text Review: "Your answer" label
+ * @type string
+ * @default Jawabanmu
+ *
+ * @param labelTimeUp
+ * @text Review: "Time's up" label
+ * @type string
+ * @default Waktu habis
+ *
+ * @param labelCorrect
+ * @text Review: "Correct answer" label
+ * @type string
+ * @default Jawaban benar
+ *
+ * @param labelExplanation
+ * @text Review: "Explanation" label
+ * @type string
+ * @default Pembahasan
+ *
+ * @param hintNext
+ * @text Review: hint (more questions left)
+ * @type string
+ * @default Enter: lanjut  |  Esc: lewati semua
+ *
+ * @param hintDone
+ * @text Review: hint (last question)
+ * @type string
+ * @default Enter: selesai
+ *
  * @help
  * ============================================================================
- * MATHWOLF - FIGHTER v5  (also hosts the shared math-QTE system)
+ * MATHWOLF - FIGHTER v6  (also hosts the shared math-QTE system)
  * ============================================================================
  * REQUIRES: MathWolf_Questions.js must be enabled too (it holds the actual
  * questions). Without it the game falls back to simple multiplication.
@@ -139,6 +181,18 @@
  * While that state is active, every successful normal Attack immediately
  * chains into a SECOND, faster question for bonus damage. Missing the chain
  * just means no bonus - the base hit still lands normally.
+ *
+ * ----------------------------------------------------------------------------
+ * POST-BATTLE REVIEW (new in v6)
+ * Every question you get wrong (or run out of time on) is remembered. When
+ * the battle ends - after the usual victory messages - a review screen shows
+ * each missed question once: your answer, the correct answer, and a short
+ * explanation (the "e:" text in MathWolf_Questions.js).
+ *   Enter / click : next question (or finish)
+ *   Left          : previous question
+ *   Esc / right-click : skip the rest
+ * Works for every class, since all QTEs go through the same system.
+ * Turn it off with "Show Review After Battle" = false.
  * ============================================================================
  */
 
@@ -166,6 +220,14 @@
   const CHAIN_TIME = Number(params.berserkChainTimeSeconds || 20);
   const CHAIN_MULT = Number(params.berserkChainMultiplier || 2.2);
   const DEFAULT_QTE_SECONDS = 30;
+  const SHOW_REVIEW = params.showReview !== "false";
+  const TXT_TITLE = params.reviewTitle || "Review Soal";
+  const TXT_YOURS = params.labelYourAnswer || "Jawabanmu";
+  const TXT_TIMEUP = params.labelTimeUp || "Waktu habis";
+  const TXT_RIGHT = params.labelCorrect || "Jawaban benar";
+  const TXT_EXPL = params.labelExplanation || "Pembahasan";
+  const HINT_NEXT = params.hintNext || "Enter: lanjut  |  Esc: lewati semua";
+  const HINT_DONE = params.hintDone || "Enter: selesai";
 
   //=====================================================================
   // Shared problem system (also used by the Mage plugin via window.MathWolf)
@@ -187,7 +249,7 @@
       .replace(/>=/g, "\u2265")
       .replace(/ \* /g, " \u00D7 ")
       .replace(/ - /g, " \u2212 ")
-      .replace(/(^|[\s(=,{])-(?=\d)/g, "$1\u2212");
+      .replace(/(^|[\s(=,{])-(?=[\w(])/g, "$1\u2212");
   };
 
   function shuffle(arr) {
@@ -246,6 +308,7 @@
       );
       return {
         question: MathWolf.pretty(item.q),
+        explanation: item.e ? MathWolf.pretty(item.e) : "",
         choices: options.map(function (o) { return o.text; }),
         correctIndex: options.findIndex(function (o) { return o.correct; }),
       };
@@ -271,6 +334,7 @@
     );
     return {
       question: a + " \u00D7 " + b + " = ?",
+      explanation: "",
       choices: options.map(function (o) { return o.text; }),
       correctIndex: options.findIndex(function (o) { return o.correct; }),
     };
@@ -286,6 +350,25 @@
       console.warn("MathWolf: question bank not found - enable MathWolf_Questions.js");
     }
     return fallbackProblem();
+  };
+
+  //=====================================================================
+  // Missed-question log for the post-battle review
+  //=====================================================================
+  MathWolf._misses = [];
+
+  // chosenIndex = which answer was picked, or undefined if time ran out
+  MathWolf.recordMiss = function (problem, chosenIndex) {
+    if (!problem) return;
+    for (const m of MathWolf._misses) {
+      if (m.question === problem.question) return; // each question only once
+    }
+    MathWolf._misses.push({
+      question: problem.question,
+      chosenText: typeof chosenIndex === "number" ? problem.choices[chosenIndex] : null,
+      correctText: problem.choices[problem.correctIndex],
+      explanation: problem.explanation || "",
+    });
   };
 
   //=====================================================================
@@ -372,6 +455,35 @@
     for (const actor of $gameParty.battleMembers()) {
       if (actor.isMathWolfFighter()) actor.mathWolfRefillDurability();
     }
+  };
+
+  //=====================================================================
+  // Review hooks: start each battle with an empty miss list, and show the
+  // review (once) right before the battle scene closes.
+  //=====================================================================
+  const _BattleManager_setup = BattleManager.setup;
+  BattleManager.setup = function () {
+    _BattleManager_setup.apply(this, arguments);
+    MathWolf._misses = [];
+    this._mathWolfReviewDone = false;
+  };
+
+  const _BattleManager_updateBattleEnd = BattleManager.updateBattleEnd;
+  BattleManager.updateBattleEnd = function () {
+    if (
+      SHOW_REVIEW &&
+      !this._mathWolfReviewDone &&
+      !this.isBattleTest() &&
+      MathWolf._misses.length > 0
+    ) {
+      const scene = SceneManager._scene;
+      if (scene && scene.startMathWolfReview) {
+        this._mathWolfReviewDone = true;
+        scene.startMathWolfReview(MathWolf._misses.slice());
+        return; // the scene stays busy until the player closes the review
+      }
+    }
+    _BattleManager_updateBattleEnd.call(this);
   };
 
   //=====================================================================
@@ -566,6 +678,122 @@
   };
 
   //=====================================================================
+  // Window_MathReview - post-battle explanation of one missed question
+  //=====================================================================
+  function Window_MathReview() {
+    this.initialize(...arguments);
+  }
+
+  Window_MathReview.prototype = Object.create(Window_Base.prototype);
+  Window_MathReview.prototype.constructor = Window_MathReview;
+  Window_MathReview.prototype.wrapLines = Window_MathPrompt.prototype.wrapLines;
+
+  Window_MathReview.prototype.initialize = function (rect) {
+    Window_Base.prototype.initialize.call(this, rect);
+    this._entries = [];
+    this._index = 0;
+    this._layout = [];
+    this._size = 20;
+  };
+
+  Window_MathReview.prototype.setEntries = function (entries) {
+    this._entries = entries;
+    this._index = 0;
+    this.layoutEntry();
+    this.refresh();
+  };
+
+  Window_MathReview.prototype.hasNext = function () {
+    return this._index < this._entries.length - 1;
+  };
+
+  Window_MathReview.prototype.next = function () {
+    if (!this.hasNext()) return false;
+    this._index++;
+    this.layoutEntry();
+    this.refresh();
+    return true;
+  };
+
+  Window_MathReview.prototype.prev = function () {
+    if (this._index <= 0) return false;
+    this._index--;
+    this.layoutEntry();
+    this.refresh();
+    return true;
+  };
+
+  // Lines of text for one entry at a given font size
+  Window_MathReview.prototype.buildLines = function (entry, size) {
+    this.contents.fontSize = size;
+    const w = this.innerWidth;
+    const out = [];
+    const self = this;
+    function addPara(text, color, gapBefore) {
+      const lines = self.wrapLines(text, w);
+      for (let i = 0; i < lines.length; i++) {
+        out.push({ text: lines[i], color: color, gap: i === 0 ? gapBefore : 0 });
+      }
+    }
+    const yours = entry.chosenText === null ? TXT_TIMEUP : entry.chosenText;
+    addPara(entry.question, ColorManager.normalColor(), 0);
+    addPara(TXT_YOURS + ": " + yours, ColorManager.powerDownColor(), 10);
+    addPara(TXT_RIGHT + ": " + entry.correctText, ColorManager.powerUpColor(), 0);
+    if (entry.explanation) {
+      addPara(TXT_EXPL + ":", ColorManager.systemColor(), 10);
+      addPara(entry.explanation, ColorManager.normalColor(), 0);
+    }
+    return out;
+  };
+
+  // Picks the biggest font size at which everything fits
+  Window_MathReview.prototype.layoutEntry = function () {
+    const entry = this._entries[this._index];
+    const maxHeight = this.innerHeight - 30 - 26;
+    const sizes = [20, 18, 16, 14];
+    let chosenSize = 14;
+    let chosenLines = [];
+    for (const size of sizes) {
+      const lines = this.buildLines(entry, size);
+      let height = 0;
+      for (const l of lines) height += l.gap + size + 4;
+      chosenSize = size;
+      chosenLines = lines;
+      if (height <= maxHeight) break;
+    }
+    this._size = chosenSize;
+    this._layout = chosenLines;
+  };
+
+  Window_MathReview.prototype.refresh = function () {
+    this.contents.clear();
+    const w = this.innerWidth;
+
+    this.contents.fontSize = 22;
+    this.changeTextColor(ColorManager.systemColor());
+    this.drawText(
+      TXT_TITLE + " (" + (this._index + 1) + "/" + this._entries.length + ")",
+      0, 0, w, "left"
+    );
+
+    this.contents.fontSize = this._size;
+    let y = 30;
+    for (const line of this._layout) {
+      y += line.gap;
+      this.changeTextColor(line.color);
+      this.drawText(line.text, 0, y, w, "left");
+      y += this._size + 4;
+    }
+
+    this.contents.fontSize = 16;
+    this.changeTextColor(ColorManager.systemColor());
+    this.drawText(this.hasNext() ? HINT_NEXT : HINT_DONE, 0, this.innerHeight - 24, w, "right");
+
+    this.resetTextColor();
+    this.contents.fontSize = $gameSystem.mainFontSize();
+  };
+
+  //=====================================================================
   // Window_MathChoices - the answer list (A, B, C, D - one per row)
   //=====================================================================
   function Window_MathChoices() {
@@ -640,7 +868,13 @@
     this._mathChoiceWindow.setHandler("ok", this.onMathWolfAnswer.bind(this));
     this.addWindow(this._mathChoiceWindow);
 
+    const reviewRect = new Rectangle(margin, top, width, 430);
+    this._mathReviewWindow = new Window_MathReview(reviewRect);
+    this._mathReviewWindow.hide();
+    this.addWindow(this._mathReviewWindow);
+
     this._mathWolfActive = false;
+    this._mathWolfReviewActive = false;
   };
 
   Scene_Battle.prototype.startMathWolfQTE = function (request) {
@@ -671,12 +905,13 @@
 
   Scene_Battle.prototype.onMathWolfAnswer = function () {
     const chosen = this._mathChoiceWindow.currentChoice();
-    this.finishMathWolfQTE(chosen === this._mathWolfProblem.correctIndex);
+    this.finishMathWolfQTE(chosen === this._mathWolfProblem.correctIndex, chosen);
   };
 
-  Scene_Battle.prototype.finishMathWolfQTE = function (success) {
+  Scene_Battle.prototype.finishMathWolfQTE = function (success, chosenIndex) {
     if (!this._mathWolfActive) return;
     this._mathWolfActive = false;
+    if (!success) MathWolf.recordMiss(this._mathWolfProblem, chosenIndex);
 
     this._mathChoiceWindow.deactivate();
     this._mathChoiceWindow.hide();
@@ -693,9 +928,41 @@
     return !!this._mathWolfActive;
   };
 
+  Scene_Battle.prototype.startMathWolfReview = function (entries) {
+    this._mathWolfReviewActive = true;
+    this._mathWolfReviewDelay = 12; // ignore input briefly so a held key can't skip it
+    this._mathReviewWindow.setEntries(entries);
+    this._mathReviewWindow.show();
+    this._mathReviewWindow.open();
+  };
+
+  Scene_Battle.prototype.updateMathWolfReview = function () {
+    if (this._mathWolfReviewDelay > 0) {
+      this._mathWolfReviewDelay--;
+      return;
+    }
+    if (Input.isTriggered("ok") || TouchInput.isTriggered()) {
+      SoundManager.playCursor();
+      if (!this._mathReviewWindow.next()) this.finishMathWolfReview();
+    } else if (Input.isTriggered("left")) {
+      if (this._mathReviewWindow.prev()) SoundManager.playCursor();
+    } else if (Input.isTriggered("cancel") || TouchInput.isCancelled()) {
+      SoundManager.playCancel();
+      this.finishMathWolfReview();
+    }
+  };
+
+  Scene_Battle.prototype.finishMathWolfReview = function () {
+    this._mathWolfReviewActive = false;
+    this._mathReviewWindow.hide();
+    MathWolf._misses = [];
+  };
+
   const _Scene_Battle_update = Scene_Battle.prototype.update;
   Scene_Battle.prototype.update = function () {
-    if (this._mathWolfActive) {
+    if (this._mathWolfReviewActive) {
+      this.updateMathWolfReview();
+    } else if (this._mathWolfActive) {
       this._mathWolfTimer--;
       this._mathPromptWindow.updateTimer(this._mathWolfTimer, this._mathWolfTimerTotal);
       if (this._mathWolfTimer <= 0) {
@@ -714,7 +981,11 @@
   // Freeze battle processing while the player is answering
   const _Scene_Battle_isBusy = Scene_Battle.prototype.isBusy;
   Scene_Battle.prototype.isBusy = function () {
-    return this.isMathWolfActive() || _Scene_Battle_isBusy.call(this);
+    return (
+      this.isMathWolfActive() ||
+      !!this._mathWolfReviewActive ||
+      _Scene_Battle_isBusy.call(this)
+    );
   };
 
   //=====================================================================
@@ -735,36 +1006,38 @@
     if (isFighterAttack) {
       this._enemyWindow.deactivate();
       const self = this;
-      const title = "STRIKE! Solve to hit hard";
-      $gameTemp.requestMathWolfQTE(
-        title,
-        ATTACK_TIER,
-        function (firstSuccess) {
-          const finish = function (multiplier) {
-            $gameSystem.setMathWolfAttackMultiplier(multiplier);
+
+      // Check if Berserk is active BEFORE asking the first question
+      if (actor.isMathWolfBerserk()) {
+        const chainTitle = "BERSERK FLURRY! Keep swinging!";
+        $gameTemp.requestMathWolfQTE(
+          chainTitle,
+          CHAIN_TIER,
+          function (chainSuccess) {
+            // Apply the Berserk multiplier directly (2.20x if correct, 1.50x if wrong)
+            $gameSystem.setMathWolfAttackMultiplier(chainSuccess ? CHAIN_MULT : SUCCESS_MULT);
             self._mathWolfAttackResolved = true;
             _Scene_Battle_onEnemyOk.call(self);
             self._mathWolfAttackResolved = false;
-          };
-
-          if (firstSuccess && actor.isMathWolfBerserk()) {
-            const chainTitle = "BERSERK FLURRY! Keep swinging!";
-            $gameTemp.requestMathWolfQTE(
-              chainTitle,
-              CHAIN_TIER,
-              function (chainSuccess) {
-                finish(chainSuccess ? CHAIN_MULT : SUCCESS_MULT);
-              },
-              CHAIN_TIME
-            );
-          } else {
-            finish(firstSuccess ? SUCCESS_MULT : FAIL_MULT);
-          }
-        },
-        ATTACK_TIME
-      );
+          },
+          CHAIN_TIME
+        );
+      } else {
+        // Normal fighter attack
+        const title = "STRIKE! Solve to hit hard";
+        $gameTemp.requestMathWolfQTE(
+          title,
+          ATTACK_TIER,
+          function (firstSuccess) {
+            $gameSystem.setMathWolfAttackMultiplier(firstSuccess ? SUCCESS_MULT : FAIL_MULT);
+            self._mathWolfAttackResolved = true;
+            _Scene_Battle_onEnemyOk.call(self);
+            self._mathWolfAttackResolved = false;
+          },
+          ATTACK_TIME
+        );
+      }
     } else {
       _Scene_Battle_onEnemyOk.call(this);
     }
   };
-})();

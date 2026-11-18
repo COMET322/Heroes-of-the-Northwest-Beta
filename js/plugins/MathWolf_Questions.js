@@ -1,5 +1,5 @@
 //=============================================================================
-// MathWolf_Questions.js
+// MathWolf_Questions.js (v2 - with explanations for the post-battle review)
 // The question bank for MathWolf's math QTEs (Aljabar SMP: Easy/Medium/Hard).
 // Data only - the QTE system itself lives in MathWolf_Fighter.js.
 //=============================================================================
@@ -23,12 +23,14 @@
  * HOW TO ADD YOUR OWN QUESTION
  * Copy any line below and edit it. Each question looks like this:
  *
- *   { q: "Question text", c: ["choice 1", "choice 2", "choice 3", "choice 4"], a: 2 },
+ *   { q: "Question text", c: ["choice 1", "choice 2", "choice 3", "choice 4"], a: 2, e: "Why" },
  *
  *   q = the question (use \n inside the quotes for a line break)
  *   c = exactly 4 answer choices
  *   a = position of the CORRECT choice in c, counting from 0
  *       (0 = first, 1 = second, 2 = third, 3 = fourth)
+ *   e = (optional) short explanation shown in the review screen after a
+ *       battle, if the player got this question wrong. \n = new line.
  *
  * You can type math with normal keyboard characters - they are converted
  * to nice symbols when shown in the game:
@@ -54,25 +56,35 @@
     //=====================================================================
     easy: [
       { q: "Koefisien dari variabel x pada bentuk aljabar x^2 - 8x + 12 adalah ...",
-        c: ["2", "8", "-8", "12"], a: 2 },
+        c: ["2", "8", "-8", "12"], a: 2,
+        e: "Suku yang memuat x berpangkat satu adalah -8x, jadi koefisiennya -8." },
       { q: "Pada bentuk aljabar 3x + 5y - 7, yang merupakan konstanta adalah ...",
-        c: ["3", "5", "x dan y", "-7"], a: 3 },
+        c: ["3", "5", "x dan y", "-7"], a: 3,
+        e: "Konstanta adalah suku tanpa variabel. Pada 3x + 5y - 7, konstantanya -7." },
       { q: "Jika x = 4 dan y = -2, maka nilai dari bentuk aljabar 2x^2 - 3y adalah ...",
-        c: ["26", "38", "22", "10"], a: 1 },
+        c: ["26", "38", "22", "10"], a: 1,
+        e: "Substitusi x = 4 dan y = -2:\n2x^2 - 3y = 2(16) - 3(-2) = 32 + 6 = 38." },
       { q: "Jika 5(x - 2) = 15, maka nilai x adalah ...",
-        c: ["-1", "3", "5", "7"], a: 2 },
+        c: ["-1", "3", "5", "7"], a: 2,
+        e: "5(x - 2) = 15\nx - 2 = 15/5 = 3\nx = 5" },
       { q: "Manakah dari bentuk berikut yang merupakan Persamaan Linear Satu Variabel (PLSV)?",
-        c: ["4p - 7 = 1", "x^2 - 4 = 0", "2x + 3y = 6", "2a + b > 5"], a: 0 },
+        c: ["4p - 7 = 1", "x^2 - 4 = 0", "2x + 3y = 6", "2a + b > 5"], a: 0,
+        e: "PLSV hanya punya satu variabel berpangkat 1 dan memakai tanda =. Hanya 4p - 7 = 1 yang memenuhi. x^2 - 4 = 0 berpangkat 2, 2x + 3y = 6 punya dua variabel, 2a + b > 5 bukan persamaan." },
       { q: "Bentuk sederhana dari 3x + 5y - 2x + 3y adalah ...",
-        c: ["x + 8y", "5x + 8y", "x + 2y", "5x + 2y"], a: 0 },
+        c: ["x + 8y", "5x + 8y", "x + 2y", "5x + 2y"], a: 0,
+        e: "Gabungkan suku sejenis:\n(3x - 2x) + (5y + 3y) = x + 8y" },
       { q: "Bentuk 2(3a - 4b) + 5b jika disederhanakan menjadi ...",
-        c: ["6a - 3b", "6a - 5b", "6a + 3b", "6a - 13b"], a: 0 },
+        c: ["6a - 3b", "6a - 5b", "6a + 3b", "6a - 13b"], a: 0,
+        e: "Sifat distributif: 2(3a - 4b) + 5b = 6a - 8b + 5b = 6a - 3b" },
       { q: "Hasil dari perkalian (-3a^2b)(4ab^3) adalah ...",
-        c: ["-12a^3b^4", "12a^3b^4", "-12a^2b^3", "-7a^3b^4"], a: 0 },
+        c: ["-12a^3b^4", "12a^3b^4", "-12a^2b^3", "-7a^3b^4"], a: 0,
+        e: "Kalikan koefisien, jumlahkan pangkat variabel yang sama:\n(-3 * 4) = -12, a^2 * a = a^3, b * b^3 = b^4\nJadi hasilnya -12a^3b^4." },
       { q: "Faktorisasi dari bentuk selisih dua kuadrat x^2 - 9 adalah ...",
-        c: ["(x - 3)(x - 3)", "(x + 3)(x - 3)", "(x + 9)(x - 1)", "(x - 9)(x + 1)"], a: 1 },
+        c: ["(x - 3)(x - 3)", "(x + 3)(x - 3)", "(x + 9)(x - 1)", "(x - 9)(x + 1)"], a: 1,
+        e: "Selisih dua kuadrat: a^2 - b^2 = (a + b)(a - b).\nx^2 - 9 = x^2 - 3^2 = (x + 3)(x - 3)" },
       { q: "Koefisien dari suku x^2 pada bentuk aljabar 3x^3 - 5x^2 + 2x - 8 adalah ...",
-        c: ["3", "5", "-5", "2"], a: 2 },
+        c: ["3", "5", "-5", "2"], a: 2,
+        e: "Suku yang memuat x^2 adalah -5x^2, jadi koefisiennya -5." },
     ],
 
     //=====================================================================
@@ -80,28 +92,38 @@
     //=====================================================================
     medium: [
       { q: "Sederhanakan perkalian pecahan berikut!\n((x - 2) / 3) * (9 / (2x - 4))",
-        c: ["3/2", "2/3", "3(x - 2)/2", "3"], a: 0 },
+        c: ["3/2", "2/3", "3(x - 2)/2", "3"], a: 0,
+        e: "Faktorkan 2x - 4 = 2(x - 2), lalu coret (x - 2):\n((x - 2) / 3) * (9 / (2(x - 2))) = 9 / (3 * 2) = 3/2" },
       { q: "Jika x_1 dan x_2 adalah akar-akar persamaan kuadrat x^2 - 6x + 8 = 0, maka nilai x_1 + x_2 dan x_1 * x_2 berturut-turut adalah ...",
-        c: ["6 dan 8", "-6 dan 8", "8 dan 6", "-8 dan -6"], a: 0 },
+        c: ["6 dan 8", "-6 dan 8", "8 dan 6", "-8 dan -6"], a: 0,
+        e: "Dari x^2 - 6x + 8 = 0: a = 1, b = -6, c = 8.\nx_1 + x_2 = -b/a = 6\nx_1 * x_2 = c/a = 8" },
       { q: "Bentuk pemfaktoran dari 12x^2 - 17xy - 40y^2 adalah ...",
-        c: ["(4x - 5y)(3x + 8y)", "(4x + 5y)(3x - 8y)", "(6x - 5y)(2x + 8y)", "(6x + 5y)(2x - 8y)"], a: 1 },
+        c: ["(4x - 5y)(3x + 8y)", "(4x + 5y)(3x - 8y)", "(6x - 5y)(2x + 8y)", "(6x + 5y)(2x - 8y)"], a: 1,
+        e: "Cari dua bilangan yang hasil kalinya 12 * (-40) = -480 dan jumlahnya -17, yaitu -32 dan 15.\n12x^2 - 32xy + 15xy - 40y^2 = 4x(3x - 8y) + 5y(3x - 8y) = (4x + 5y)(3x - 8y)" },
       { q: "Hasil dari (-18x^4y^3 * 2x^2y) / (6x^3y^2) adalah ...",
-        c: ["-6x^2y^2", "6x^3y^2", "-6x^3y^2", "-6x^2y"], a: 2 },
+        c: ["-6x^2y^2", "6x^3y^2", "-6x^3y^2", "-6x^2y"], a: 2,
+        e: "Pembilang: -18x^4y^3 * 2x^2y = -36x^6y^4.\nBagi dengan 6x^3y^2: -36 : 6 = -6, x^6 : x^3 = x^3, y^4 : y^2 = y^2.\nHasilnya -6x^3y^2." },
       // NOTE: the PDF printed "(x^2 + 2y)" here, which gives 10 - not one of
       // the options. "(x^2 - 2y)" gives 14, matching the PDF's answer key.
       { q: "Diketahui x adalah penyelesaian dari 2x - 5 = 7, dan y = -3. Nilai dari bentuk aljabar (x^2 - 2y) / (x + y) adalah ...",
-        c: ["7", "14", "21", "42"], a: 1 },
+        c: ["7", "14", "21", "42"], a: 1,
+        e: "Dari 2x - 5 = 7 didapat 2x = 12, jadi x = 6.\nSubstitusi x = 6 dan y = -3:\n(x^2 - 2y) / (x + y) = (36 + 6) / 3 = 42/3 = 14" },
       { q: "Bentuk paling sederhana dari pecahan aljabar (x^2 - 5x + 6) / (x^2 - 9) adalah ...",
-        c: ["(x - 2) / (x + 3)", "(x - 3) / (x + 3)", "(x - 2) / (x - 3)", "(x + 2) / (x + 3)"], a: 0 },
+        c: ["(x - 2) / (x + 3)", "(x - 3) / (x + 3)", "(x - 2) / (x - 3)", "(x + 2) / (x + 3)"], a: 0,
+        e: "Faktorkan: x^2 - 5x + 6 = (x - 2)(x - 3) dan x^2 - 9 = (x + 3)(x - 3).\nCoret (x - 3), hasilnya (x - 2) / (x + 3)." },
       { q: "Himpunan penyelesaian dari pertidaksamaan 2(3x - 1) <= 4x + 6 untuk x bilangan bulat adalah ...",
-        c: ["x <= 4", "x >= 4", "x <= 2", "x >= 2"], a: 0 },
+        c: ["x <= 4", "x >= 4", "x <= 2", "x >= 2"], a: 0,
+        e: "2(3x - 1) <= 4x + 6\n6x - 2 <= 4x + 6\n2x <= 8\nx <= 4" },
       // NOTE: the PDF's answer key said "x > 2" but solving gives x < 2.
       { q: "Penyelesaian pertidaksamaan linear (1/2)(x + 4) > 2x - 1 adalah ...",
-        c: ["x < 2", "x > 2", "x < 3", "x > -2"], a: 0 },
+        c: ["x < 2", "x > 2", "x < 3", "x > -2"], a: 0,
+        e: "Kalikan kedua ruas dengan 2: x + 4 > 4x - 2\n4 + 2 > 4x - x\n6 > 3x, maka x < 2." },
       { q: "Penyelesaian dari pertidaksamaan 3x - 2 < 10 untuk x bilangan bulat positif adalah ...",
-        c: ["{1, 2, 3}", "{1, 2, 3, 4}", "{0, 1, 2, 3}", "{2, 3, 4}"], a: 0 },
+        c: ["{1, 2, 3}", "{1, 2, 3, 4}", "{0, 1, 2, 3}", "{2, 3, 4}"], a: 0,
+        e: "3x - 2 < 10\n3x < 12\nx < 4\nBilangan bulat positif yang kurang dari 4 adalah {1, 2, 3}." },
       { q: "Himpunan penyelesaian dari 2x - 3 >= 7 adalah ...",
-        c: ["x >= 2", "x >= 5", "x <= 5", "x >= 10"], a: 1 },
+        c: ["x >= 2", "x >= 5", "x <= 5", "x >= 10"], a: 1,
+        e: "2x - 3 >= 7\n2x >= 10\nx >= 5" },
     ],
 
     //=====================================================================
@@ -109,40 +131,55 @@
     //=====================================================================
     hard: [
       { q: "Sebuah bus membawa 45 penumpang dewasa dan anak-anak. Tarif tiket dewasa Rp15.000,00 dan anak-anak Rp8.000,00. Jika total pendapatan tiket Rp535.000,00, berapa jumlah penumpang dewasa?",
-        c: ["20 orang", "30 orang", "15 orang", "25 orang"], a: 3 },
+        c: ["20 orang", "30 orang", "15 orang", "25 orang"], a: 3,
+        e: "Misal dewasa = d, anak-anak = a. d + a = 45, jadi a = 45 - d.\n15.000d + 8.000(45 - d) = 535.000\n7.000d + 360.000 = 535.000\n7.000d = 175.000, jadi d = 25 orang." },
       { q: "Mobil P berangkat dari A dengan kecepatan (x + 10) km/jam, dan mobil Q dari B menuju A dengan kecepatan (2x - 5) km/jam. Mereka bertemu dalam 2 jam. Jika jarak A-B adalah 190 km, berapa kecepatan mobil P?",
-        c: ["40 km/jam", "45 km/jam", "50 km/jam", "55 km/jam"], a: 0 },
+        c: ["40 km/jam", "45 km/jam", "50 km/jam", "55 km/jam"], a: 0,
+        e: "Jumlah jarak kedua mobil dalam 2 jam = 190 km:\n2(x + 10) + 2(2x - 5) = 190\n6x + 10 = 190, jadi x = 30.\nKecepatan P = x + 10 = 40 km/jam." },
       // NOTE: the PDF said Pipa B is "3 jam" slower, which has no solution
       // among the options. "2 jam" gives x = 4, matching the PDF's answer key.
       { q: "Suatu kolam renang diisi air melalui dua pipa. Pipa A sendiri dapat mengisi penuh dalam x jam, sedangkan Pipa B membutuhkan waktu 2 jam lebih lama dari Pipa A. Jika kedua pipa dibuka bersamaan, dalam 1 jam terisi 5/12 bagian kolam. Waktu yang dibutuhkan Pipa A untuk mengisi penuh kolam sendiri adalah ...",
-        c: ["2 jam", "3 jam", "4 jam", "5 jam"], a: 2 },
+        c: ["2 jam", "3 jam", "4 jam", "5 jam"], a: 2,
+        e: "Dalam 1 jam: 1/x + 1/(x + 2) = 5/12.\n12(2x + 2) = 5x(x + 2)\n5x^2 - 14x - 24 = 0\n(5x + 6)(x - 4) = 0, jadi x = 4 jam (x = -6/5 tidak mungkin)." },
       { q: "Amir dan Budi mengumpulkan uang bersama. Uang Amir Rp15.000,00 lebih banyak dari uang Budi. Jika dua kali uang Budi ditambah uang Amir adalah Rp105.000,00, berapa uang Amir?",
-        c: ["Rp30.000,00", "Rp45.000,00", "Rp55.000,00", "Rp60.000,00"], a: 1 },
+        c: ["Rp30.000,00", "Rp45.000,00", "Rp55.000,00", "Rp60.000,00"], a: 1,
+        e: "Misal uang Budi = B, maka uang Amir = B + 15.000.\n2B + (B + 15.000) = 105.000\n3B = 90.000, B = 30.000.\nUang Amir = 30.000 + 15.000 = Rp45.000,00" },
       { q: "Umur Ayah saat ini adalah 4 kali umur Budi. Enam tahun yang lalu, jumlah umur mereka berdua adalah 48 tahun. Berapakah umur Budi saat ini?",
-        c: ["14 tahun", "16 tahun", "10 tahun", "12 tahun"], a: 3 },
+        c: ["14 tahun", "16 tahun", "10 tahun", "12 tahun"], a: 3,
+        e: "Umur Budi = B, umur Ayah = 4B. Enam tahun lalu:\n(4B - 6) + (B - 6) = 48\n5B - 12 = 48, 5B = 60, B = 12 tahun." },
       { q: "Rina membeli 3 kg apel dan 2 kg jeruk. Ia membayar dengan 2 lembar uang seratus ribuan dan menerima kembalian sebesar Rp85.000,00. Di toko yang sama, Dewi membeli 1 kg apel dan 3 kg jeruk dengan total harga Rp85.000,00. Jika Ibu membeli 2 kg apel dan 2 kg jeruk serta mendapat diskon Rp10.000,00, berapakah total uang yang harus dibayarkan Ibu?",
-        c: ["Rp70.000,00", "Rp80.000,00", "Rp90.000,00", "Rp100.000,00"], a: 1 },
+        c: ["Rp70.000,00", "Rp80.000,00", "Rp90.000,00", "Rp100.000,00"], a: 1,
+        e: "Belanja Rina = 200.000 - 85.000 = 115.000.\n3a + 2j = 115.000 dan a + 3j = 85.000, jadi a = 85.000 - 3j.\n3(85.000 - 3j) + 2j = 115.000, maka 7j = 140.000, j = 20.000 dan a = 25.000.\nIbu: 2(25.000) + 2(20.000) - 10.000 = Rp80.000,00" },
       // NOTE: the PDF's answer key said 13 km, but the numbers give 12 km.
       { q: "Suatu taksi memberlakukan tarif awal sebesar Rp6.000,00. Tarif untuk 1 km pertama adalah Rp8.000,00, dan untuk setiap kilometer berikutnya adalah Rp4.000,00. Jika Amir menggunakan taksi tersebut dan membayar total Rp58.000,00, berapakah jarak total yang ditempuh Amir?",
-        c: ["14 km", "13 km", "12 km", "11 km"], a: 2 },
+        c: ["14 km", "13 km", "12 km", "11 km"], a: 2,
+        e: "Tarif awal 6.000 + 1 km pertama 8.000 = 14.000.\nSisa bayar = 58.000 - 14.000 = 44.000.\nKm berikutnya = 44.000 / 4.000 = 11 km.\nJarak total = 1 + 11 = 12 km." },
       { q: "Sebuah wadah memuat x kelereng. Doni mengambil 1/4 bagian dari total kelereng. Setelah itu, Eko mengambil 1/3 bagian dari sisa kelereng yang ada di dalam wadah. Jika sisa kelereng terakhir di dalam wadah adalah 30 butir, berapakah banyak kelereng yang diterima Eko?",
-        c: ["60 butir", "45 butir", "20 butir", "15 butir"], a: 3 },
+        c: ["60 butir", "45 butir", "20 butir", "15 butir"], a: 3,
+        e: "Sisa setelah Doni = 3/4 x. Eko mengambil 1/3 * 3/4 x = 1/4 x.\nSisa akhir = 3/4 x - 1/4 x = 1/2 x = 30, jadi x = 60.\nEko mengambil 1/4 * 60 = 15 butir." },
       { q: "Jumlah dua buah bilangan adalah 45. Jika bilangan pertama dikurangi 3, nilainya menjadi dua kali bilangan kedua. Berapakah hasil kali kedua bilangan tersebut?",
-        c: ["434", "464", "450", "310"], a: 0 },
+        c: ["434", "464", "450", "310"], a: 0,
+        e: "x + y = 45 dan x - 3 = 2y, jadi x = 45 - y.\n(45 - y) - 3 = 2y, 42 = 3y, y = 14 dan x = 31.\nHasil kali = 31 * 14 = 434." },
       { q: "Budi membeli 3 buku tulis dan 2 pensil dengan total harga Rp16.500,00. Jika harga satu buku tulis dinyatakan dengan x dan harga satu pensil dinyatakan dengan y, maka model matematika yang tepat adalah ...",
-        c: ["3x + 2y = 16.500", "2x + 3y = 16.500", "3x - 2y = 16.500", "5(x + y) = 16.500"], a: 0 },
+        c: ["3x + 2y = 16.500", "2x + 3y = 16.500", "3x - 2y = 16.500", "5(x + y) = 16.500"], a: 0,
+        e: "3 buku tulis = 3x dan 2 pensil = 2y.\nJumlahnya Rp16.500, jadi 3x + 2y = 16.500." },
       { q: "Sebuah kebun berbentuk persegi panjang mempunyai ukuran panjang (3x - 2) meter dan lebar (x + 5) meter. Luas kebun tersebut dalam variabel x adalah ...",
-        c: ["(3x^2 + 13x - 10) m^2", "(3x^2 - 13x - 10) m^2", "(3x^2 + 17x - 10) m^2", "(3x^2 + 13x + 10) m^2"], a: 0 },
+        c: ["(3x^2 + 13x - 10) m^2", "(3x^2 - 13x - 10) m^2", "(3x^2 + 17x - 10) m^2", "(3x^2 + 13x + 10) m^2"], a: 0,
+        e: "Luas = panjang * lebar = (3x - 2)(x + 5)\n= 3x^2 + 15x - 2x - 10\n= 3x^2 + 13x - 10 (m^2)" },
       // NOTE: the PDF said the perimeter is 36 cm, which gives x = 6.67.
       // 38 cm gives x = 7, matching the PDF's answer key.
       { q: "Suatu segitiga memiliki panjang sisi-sisinya (x + 2) cm, (2x - 1) cm, dan (3x - 5) cm. Jika keliling segitiga tersebut adalah 38 cm, nilai x adalah ...",
-        c: ["5", "6", "7", "8"], a: 2 },
+        c: ["5", "6", "7", "8"], a: 2,
+        e: "Keliling = jumlah ketiga sisi:\n(x + 2) + (2x - 1) + (3x - 5) = 38\n6x - 4 = 38, 6x = 42, x = 7." },
       { q: "Tiga bilangan bulat berurutan jika dijumlahkan menghasilkan nilai 108. Berapakah selisih (beda) antara bilangan terbesar dan bilangan terkecil?",
-        c: ["2", "3", "4", "6"], a: 0 },
+        c: ["2", "3", "4", "6"], a: 0,
+        e: "Tiga bilangan berurutan: n, n + 1, n + 2.\nSelisih terbesar dan terkecil = (n + 2) - n = 2." },
       { q: "Jumlah dua bilangan cacah adalah 35, sedangkan selisih kedua bilangan adalah 9. Berapakah hasil kali kedua bilangan tersebut?",
-        c: ["286", "276", "296", "306"], a: 0 },
+        c: ["286", "276", "296", "306"], a: 0,
+        e: "x + y = 35 dan x - y = 9. Jumlahkan: 2x = 44, x = 22, y = 13.\nHasil kali = 22 * 13 = 286." },
       { q: "Sebuah bak mandi dapat diisi penuh oleh pipa A saja dalam waktu 6 jam dan oleh pipa B saja dalam waktu 3 jam. Berapa jam waktu yang dibutuhkan jika kedua pipa dibuka bersama-sama?",
-        c: ["1,5 jam", "2 jam", "2,5 jam", "3 jam"], a: 1 },
+        c: ["1,5 jam", "2 jam", "2,5 jam", "3 jam"], a: 1,
+        e: "Kerja bersama dalam 1 jam: 1/6 + 1/3 = 1/6 + 2/6 = 3/6 = 1/2 bagian.\nJadi waktu yang dibutuhkan 2 jam." },
     ],
   };
 })();

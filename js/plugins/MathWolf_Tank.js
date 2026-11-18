@@ -2,11 +2,12 @@
 // MathWolf_Tank.js
 // Tank role: guarding makes enemies much more likely to target this actor.
 // No math involved - this is a pure aggro mechanic.
+// UPDATED: Adds a follow-up attack every 7 times the tank is hit.
 //=============================================================================
 
 /*:
  * @target MZ
- * @plugindesc MathWolf Tank Prototype - Guard raises aggro (target rate)
+ * @plugindesc MathWolf Tank Prototype - Guard raises aggro + 7-hit Counter
  * @author MathWolf Dev
  *
  * @param aggroMultiplier
@@ -16,6 +17,18 @@
  * @type number
  * @decimals 1
  * @default 4.0
+ *
+ * @param hitsRequired
+ * @text Hits Required for Counter
+ * @desc How many times the Tank needs to be hit before they automatically strike back.
+ * @type number
+ * @default 7
+ *
+ * @param showCounter
+ * @text Show Hit Counter Text
+ * @desc Show a small popup text when the Tank gets hit, tracking progress towards the counter.
+ * @type boolean
+ * @default true
  *
  * @help
  * ============================================================================
@@ -33,10 +46,10 @@
  * RPG Maker MZ picks targets randomly weighted by target rate, so a big
  * multiplier makes them the overwhelmingly likely target while guarding.
  *
- * NOTE: If an enemy's action has a specific AI condition that always
- * targets, say, "lowest HP ally" instead of a random target, aggro won't
- * override that - target rate only affects random-weighted target choice,
- * which is what most default enemy attacks use.
+ * COUNTER ATTACK:
+ * Every time the Tank takes damage, their hit counter goes up. When it hits
+ * the threshold (default 7), they immediately perform a free normal attack
+ * against the enemy who triggered it.
  * ============================================================================
  */
 
@@ -46,6 +59,8 @@
   const PLUGIN_NAME = "MathWolf_Tank";
   const params = PluginManager.parameters(PLUGIN_NAME);
   const AGGRO_MULT = Number(params.aggroMultiplier || 4.0);
+  const HITS_REQUIRED = Number(params.hitsRequired || 7);
+  const SHOW_COUNTER = params.showCounter !== "false";
 
   //=====================================================================
   // Role helper - defined defensively so this plugin works even if
@@ -119,10 +134,7 @@
 
   //=====================================================================
   // ULTIMATE: when a skill tagged <MathWolfTankUltimate:ID> is used,
-  // add state ID to the caster (self) - regardless of the skill's own
-  // Scope, which is usually "All Allies" so the shield-grant notetag
-  // (from MathWolf_Shield.js) can also hit the whole party in the same
-  // action. This runs once per use, not once per target.
+  // add state ID to the caster (self)
   //=====================================================================
   const _BattleManager_startAction_tank = BattleManager.startAction;
   BattleManager.startAction = function () {
@@ -135,4 +147,67 @@
     }
     _BattleManager_startAction_tank.call(this);
   };
+
+  //=====================================================================
+  // NEW: Hit Counter & Follow-up Attack System
+  //=====================================================================
+  const _Game_BattlerBase_performDamage = Game_BattlerBase.prototype.performDamage;
+  Game_BattlerBase.prototype.performDamage = function () {
+    _Game_BattlerBase_performDamage.call(this);
+
+    // Only proceed if it's the Tank taking damage and they are alive
+    if (this.isActor() && this.isMathWolfTank() && this.isAlive()) {
+      
+      // Initialize counter if it doesn't exist
+      if (this._mathWolfHitCounter === undefined) {
+        this._mathWolfHitCounter = 0;
+      }
+      
+      this._mathWolfHitCounter++;
+
+      // Show a small popup text so the player knows it's counting
+      if (SHOW_COUNTER && this._mathWolfHitCounter < HITS_REQUIRED) {
+        this.startDamagePopup(); // RPG Maker MZ default damage popup
+        this._result.pushText("Hit: " + this._mathWolfHitCounter + "/" + HITS_REQUIRED);
+      }
+
+      // Check if it's time to counter attack
+      if (this._mathWolfHitCounter >= HITS_REQUIRED) {
+        this._mathWolfHitCounter = 0; // Reset counter
+        
+        // Show popup that they are countering
+        this.startDamagePopup();
+        this._result.pushText("COUNTER!");
+        
+        // Queue a free normal attack against the last attacker
+        // We use setTimeout so it waits for the current damage animation to finish
+        const tank = this;
+        const enemy = tank._lastAttacker; // MZ stores the last attacker here usually
+        
+        if (enemy && enemy.isAlive()) {
+          setTimeout(() => {
+            if (SceneManager._scene && SceneManager._scene._spriteset && BattleManager.isProcessing()) {
+              const action = new Game_Action(tank);
+              action.setAttack();
+              action.setTarget(enemy.index());
+              action.apply(enemy);
+              
+              // Play a weapon swing sound to make it feel like a physical counter
+              SoundManager.playActorCollapse(); // or SoundManager.playAttack() depending on your sounds
+            }
+          }, 300); // 300ms delay for realism
+        }
+      }
+    }
+  };
+
+  // Track the last attacker on the Tank
+  const _Game_Action_apply_tank = Game_Action.prototype.apply;
+  Game_Action.prototype.apply = function (target) {
+    _Game_Action_apply_tank.call(this, target);
+    if (target && target.isActor() && target.isMathWolfTank()) {
+      target._lastAttacker = this.subject();
+    }
+  };
+
 })();
