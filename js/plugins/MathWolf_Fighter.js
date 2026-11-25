@@ -1041,3 +1041,4 @@
       _Scene_Battle_onEnemyOk.call(this);
     }
   };
+})();
